@@ -56,13 +56,15 @@ selected_section = st.sidebar.radio(
 # --- Image Selection ---
 image_choice = st.sidebar.radio(
     "Select Image:",
-    ("Mandrill", "Fluorescence")
+    ("Mandrill", "Fluorescence", "Kidney MRI")
 )
 
 if image_choice == "Mandrill":
     img = mandrill_image
-else:
+elif image_choice == "Fluorescence":
     img = IF
+else:
+    img = kidney_mri
 
 # --- Image Upload ---
 uploaded_file = st.sidebar.file_uploader("Upload an Image", type=["jpg", "jpeg", "png"])
@@ -111,7 +113,8 @@ elif selected_section == "Gamma Correction":
     st.header("Gamma Correction")
     st.markdown("Adjusting the brightness of the image using a non-linear operation.")
 
-    gamma = st.slider("Gamma Value", 0.1, 3.0, 1.0)
+    gamma_tooltip = "Adjusts the overall brightness of the image. Values less than 1 darken the image, while values greater than 1 brighten it."
+    gamma = st.slider("Gamma Value", 0.1, 3.0, 1.0, help=gamma_tooltip)
 
     # Apply gamma correction
     corrected_image = np.uint8(np.clip(255 * (img / 255) ** gamma, 0, 255))
@@ -128,8 +131,11 @@ elif selected_section == "Contrast Adjustment":
     st.header("Contrast Adjustment")
     st.markdown("Adjusting the contrast of the image.")
 
-    in_range_min = st.slider("In Range Min", 0.0, 1.0, 0.55)
-    in_range_max = st.slider("In Range Max", 0.0, 1.0, 0.7)
+    min_tooltip = "Sets the lower bound of the intensity range used for rescaling."
+    max_tooltip = "Sets the upper bound of the intensity range used for rescaling."
+
+    in_range_min = st.slider("In Range Min", 0.0, 1.0, 0.55, help=min_tooltip)
+    in_range_max = st.slider("In Range Max", 0.0, 1.0, 0.7, help=max_tooltip)
 
     # Apply contrast adjustment
     adj_img = exposure.rescale_intensity(img_as_float(img), in_range=(in_range_min, in_range_max), out_range=(0, 1))
@@ -152,7 +158,8 @@ elif selected_section == "Negative Transformation":
     st.markdown("Inverting the colors of the image.")
 
     # Interactive Negative Transformation
-    inv_level = st.slider("Inversion Level", 0, 255, 127)  # Slider for inversion level
+    inv_level_tooltip = "Adjusts the overall intensity of the inverted image."
+    inv_level = st.slider("Inversion Level", 0, 255, 127, help=inv_level_tooltip)  # Slider for inversion level
 
     # Apply negative transformation based on the slider value
     inverted_image = 255 - (img * (255 / np.max(img))).astype(np.uint8)
@@ -169,8 +176,8 @@ elif selected_section == "Histogram Equalization":
     st.header("Histogram Equalization")
     st.markdown("Image contrast enhancement using histogram analysis.")
 
-    # Add a slider for the number of bins
-    num_bins = st.slider("Number of Histogram Bins", 10, 256, 256)
+    bins_tooltip = "Controls the number of bins used to create the histogram. Higher values provide more detail but may be noisier."
+    num_bins = st.slider("Number of Histogram Bins", 10, 256, 256, help=bins_tooltip)
 
     if img.ndim == 3:
         img_gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
@@ -205,8 +212,11 @@ elif selected_section == "CLAHE":
     st.header("CLAHE")
     st.markdown("Image enhancement by applying Contrast Limited Adaptive Histogram Equalization (CLAHE).")
 
-    clip_limit = st.slider("Clip Limit", 1.0, 10.0, 2.0)  # Interactive clip limit
-    tile_grid_size = st.slider("Tile Grid Size", 2, 32, 8)  # Interactive tile grid size
+    clip_tooltip = "Limits the contrast enhancement in each tile to prevent noise amplification."
+    tile_tooltip = "Determines the size of the tiles used for local histogram equalization. Smaller tiles provide more localized enhancement but can introduce artifacts."
+
+    clip_limit = st.slider("Clip Limit", 1.0, 10.0, 2.0, help=clip_tooltip)  # Interactive clip limit
+    tile_grid_size = st.slider("Tile Grid Size", 2, 32, 8, help=tile_tooltip)  # Interactive tile grid size
 
     if img.ndim == 3:
         img_gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
@@ -229,8 +239,12 @@ elif selected_section == "Non-linear Intensity Transformation":
     st.header("Non-linear Intensity Transformation")
     st.markdown("Contrast enhancement of a low-contrast image using a non-linear intensity transformation.")
 
-    m_val = st.slider("m Value", 0.0, 5.0, 0.5)  # Interactive m value
-    E_val = st.slider("E Value", 1.0, 100.0, 100.0)  # Interactive E value
+    # --- Tooltips using HTML and CSS ---
+    m_tooltip = "Controls the shape of the intensity transformation curve. Higher values increase the contrast in darker regions."
+    E_tooltip = "Determines the overall strength of the transformation. Higher values result in a more pronounced effect."
+
+    m_val = st.slider("m Value", 0.0, 5.0, 0.5, help=m_tooltip)  # Interactive m value
+    E_val = st.slider("E Value", 1.0, 100.0, 100.0, help=E_tooltip)  # Interactive E value
 
     G = 1. / (1. + m_val / (img_as_float(img) + 1e-4)) ** E_val
 
