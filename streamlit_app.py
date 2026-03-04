@@ -170,7 +170,8 @@ elif selected_section == "Contrast Adjustment":
     with col1:
         st.image(img, caption="Original", use_container_width=True)
     with col2:
-        st.image(adj_img, cmap='gray', caption="Adjusted", use_container_width=True)
+        # BUG FIXED HERE: Removed cmap='gray'
+        st.image(adj_img, caption="Adjusted", use_container_width=True)
 
 elif selected_section == "Negative Transformation":
     st.header("Negative Transformation")
